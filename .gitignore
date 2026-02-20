@@ -39,3 +39,15 @@
 
 # debug information files
 *.dwo
+
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/
+
+# CLion
+.idea/
+cmake-build-*/
+
+*.log
