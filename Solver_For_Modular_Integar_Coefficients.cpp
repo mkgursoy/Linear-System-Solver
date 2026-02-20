@@ -6,99 +6,81 @@
 
 #define int long long
 
-struct Fraction
+const int MOD = 1e9 + 7;
+
+int mul(int a,int b,int mod = MOD)
 {
-    int Numerator, Denominator;
-    Fraction()
+    if(a > mod)
+    a %= mod;
+    if(b > mod)
+    b %= mod;
+    return a * 1LL * b % mod;
+}
+int sum(int a,int b,int mod = MOD)
+{
+    if(a > mod)
+    a %= mod;
+    if(b > mod)
+    b %= mod;
+    return (a + b + mod) % mod;
+}
+int binpow(int base,int power,int mod = MOD)
+{
+    if(power == 1) return base;
+    if(power == 0) return 1;
+    
+    if(power%2==1)
     {
-        Numerator = 0, Denominator = 0;
-    }
-    Fraction(int x)
+        int a;  
+        a = binpow(base,(power - 1)/2);
+        return mul(base, mul(a, a, mod), mod);
+    } 
+    else
     {
-        Numerator = x, Denominator = 1;
-    }
-    Fraction(int x,int y)
-    {
-        Numerator = x, Denominator = y;
-    }
-    void stabilize()
-    {
-        if(Numerator <= 0 && Denominator <= 0)
-        {
-            Numerator *= -1;
-            Denominator *= -1;
-        }
-        else if(Denominator <= 0)
-        {
-            Numerator *= -1;
-            Denominator *= -1;
-        }
-        int gc = std::gcd(Numerator, Denominator);
-        Numerator /= gc;
-        Denominator /= gc;
-    }
-    void outp()
-    {
-        std::cout << Numerator << "/" << Denominator;
-    }
-    Fraction reciprocal()
-    {
-        return Fraction(Denominator, Numerator);
-    }
-    Fraction nega()
-    {
-        return Fraction(-Numerator, Denominator);
-    }
-    Fraction stable(Fraction x)
-    {
-        x.stabilize();
-        return x;
-    }
-    Fraction operator+(const Fraction &other)
-    {
-        return Fraction(stable(Fraction(other.Denominator * Numerator + other.Numerator * Denominator, Denominator * other.Denominator)));
-    }
-    Fraction operator*(const Fraction &other)
-    {
-        return Fraction(stable(Fraction(Numerator * other.Numerator, Denominator * other.Denominator)));
-    }
-    Fraction operator/(const Fraction &other)
-    {
-        return Fraction(stable(Fraction(other.Denominator * Numerator, Denominator * other.Numerator)));
-    }
-};
-const int mxN = 10000;
-std::vector<Fraction> augmented_matrix[mxN];
+        int a;
+        a = binpow(base,power/2);
+        return mul(a, a, mod);
+    } 
+ 
+}
+int inv(int a,int mod = MOD)
+{
+    if(a > mod)
+    a %= mod;
+    return binpow(a, mod - 2) % mod;
+}
+const int mxN = 607;
+std::vector<int> augmented_matrix[mxN];
 void Interchange_Rows(int row_id1,int row_id2)
 {
     swap(augmented_matrix[row_id1], augmented_matrix[row_id2]);
 }
-void Multiply_Row_By_Constant(Fraction Constant,int row_id)
+void Multiply_Row_By_Constant(int Constant,int row_id)
 {
     for(auto& it : augmented_matrix[row_id])
     {
-        it = it * Constant;
+        it = mul(it, Constant);
     }
 }
-void Add_Row_To_Another(Fraction Constant,int row_id_add,int row_id_add_to)
+void Add_Row_To_Another(int Constant,int row_id_add,int row_id_add_to)
 {
     for(int K = 0;augmented_matrix[row_id_add_to].size() > K;K++)
     {
-        augmented_matrix[row_id_add_to][K] = Constant * augmented_matrix[row_id_add][K] + augmented_matrix[row_id_add_to][K];
+        augmented_matrix[row_id_add_to][K] = sum(mul(Constant, augmented_matrix[row_id_add][K]),augmented_matrix[row_id_add_to][K]);
     }
 }
 bool Check_Row_For_Inconsistency(int row_id)
 {
     bool t = false;
-    for(int j = 0;(int)augmented_matrix[row_id].size() - 1 > j;j++)
+    for(int j = 0;(int)augmented_matrix[row_id].size() > j + 1;j++)
     {
-        if(augmented_matrix[row_id][j].Numerator != 0)
+        if(augmented_matrix[row_id][j] != 0)
         {
             t = true;
             break;
         }
     }
-    if(!t && augmented_matrix[row_id].back().Numerator != 0) return false;
+    if(!t && augmented_matrix[row_id].back() != 0) return false;
     return true;
 }
 void solveLinearSystem()
@@ -113,7 +95,7 @@ void solveLinearSystem()
         {
             int coefficient;
             std::cin >> coefficient;
-            augmented_matrix[i][j] = Fraction(coefficient);
+            augmented_matrix[i][j] = coefficient;
         }
     }
     int cur = 0;
@@ -122,17 +104,17 @@ void solveLinearSystem()
         if(cur == numberOfEquations) break;
         for(int i = cur;numberOfEquations > i;i++)
         {
-            if(augmented_matrix[i][j].Numerator != 0)
+            if(augmented_matrix[i][j] != 0)
             {
                 Interchange_Rows(cur, i);
                 break;
             }
         }
-        if(augmented_matrix[cur][j].Numerator == 0) continue;
-        Multiply_Row_By_Constant(augmented_matrix[cur][j].reciprocal(), cur);
+        if(augmented_matrix[cur][j] == 0) continue;
+        Multiply_Row_By_Constant(inv(augmented_matrix[cur][j]), cur);
         for(int i = cur + 1;numberOfEquations > i;i++)
         {
-            Add_Row_To_Another(augmented_matrix[i][j].nega(), cur, i);
+            Add_Row_To_Another(-augmented_matrix[i][j], cur, i);
         }
         cur++;
     }
@@ -141,8 +123,7 @@ void solveLinearSystem()
     {
         for(int j = 0;numberOfVariables >= j;j++)
         {
-            augmented_matrix[i][j].outp();
-            std::cout << " ";
+            std::cout << augmented_matrix[i][j] << " ";
         }
         std::cout << std::endl;
     }
@@ -151,7 +132,7 @@ void solveLinearSystem()
         int cc = -1;
         for(int i = numberOfEquations - 1;i >= 0;i--)
         {
-            if(augmented_matrix[i][j].Numerator == 1)
+            if(augmented_matrix[i][j] == 1)
             {
                 cc = i;
                 break;
@@ -160,7 +141,7 @@ void solveLinearSystem()
         if(cc == -1) continue;
         for(int i = 0;cc > i;i++)
         {
-            Add_Row_To_Another(augmented_matrix[i][j].nega(), cc, i);
+            Add_Row_To_Another(-augmented_matrix[i][j], cc, i);
         }
     }
     std::cout << "Reduced Row Echelon Form: " << std::endl;
@@ -168,8 +149,7 @@ void solveLinearSystem()
     {
         for(int j = 0;numberOfVariables >= j;j++)
         {
-            augmented_matrix[i][j].outp();
-            std::cout << " ";
+            std::cout << augmented_matrix[i][j] << " ";
         }
         std::cout << std::endl;
     }
@@ -188,7 +168,7 @@ void solveLinearSystem()
         bool found_leading = false;
         for(int j = 0;numberOfVariables > j;j++)
         {
-            if(augmented_matrix[i][j].Numerator == 1 && !found_leading)
+            if((augmented_matrix[i][j] == 1) && !found_leading)
             {
                 leading.push_back(j);
                 found_leading = true;
@@ -196,30 +176,30 @@ void solveLinearSystem()
             }
         }
     }
-    int ind = 0;
+    int tt = 0;
     for(int i = 0;numberOfVariables > i;i++)
     {
-        if((int)leading.size() <= ind || leading[ind] != i)
+        if((int)leading.size() <= tt || leading[tt] != i)
         {
             free.push_back(i);
         }
-        else ind++;
+        else tt++;
     }
     //Free Variables Will Be Set To 0
-    std::vector<Fraction> val(numberOfVariables);
-    for(auto i : free) val[i] = Fraction(0);
+    std::vector<int> val(numberOfVariables);
+    for(auto i : free) val[i] = 0;
     for(int i = 0;numberOfEquations > i;i++)
     {
         for(int j = 0;numberOfVariables > j;j++)
         {
-            if(augmented_matrix[i][j].Numerator == 1)
+            if(augmented_matrix[i][j] == 1)
             {
                 val[j] = augmented_matrix[i][numberOfVariables];
                 for(int k = j + 1;numberOfVariables > k;k++)
                 {
-                    if(augmented_matrix[i][k].Numerator != 0)
+                    if(augmented_matrix[i][k] != 0)
                     {
-                        val[j] = val[j] + val[k] * augmented_matrix[i][k].nega();
+                        val[j] = sum(val[j], mul(val[k], -augmented_matrix[i][k]));
                     }
                 }
                 break;
@@ -231,8 +211,7 @@ void solveLinearSystem()
     std::cout << "Possible Solution: " << std::endl;
     for(int i = 0;numberOfVariables > i;i++)
     {
-        val[i].outp();
-        std::cout << " ";
+        std::cout << val[i] << " ";
     }
     std::cout << std::endl;
 }
