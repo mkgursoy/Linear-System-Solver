@@ -13,14 +13,6 @@ struct Fraction
     {
         Numerator = 0, Denominator = 0;
     }
-    Fraction(int x)
-    {
-        Numerator = x, Denominator = 1;
-    }
-    Fraction(int x,int y)
-    {
-        Numerator = x, Denominator = y;
-    }
     void stabilize()
     {
         if(Numerator <= 0 && Denominator <= 0)
@@ -37,22 +29,31 @@ struct Fraction
         Numerator /= gc;
         Denominator /= gc;
     }
+    Fraction stable(Fraction x)
+    {
+        x.stabilize();
+        return x;
+    }
+    Fraction(int x)
+    {
+        Numerator = x, Denominator = 1;
+    }
+    Fraction(int x,int y)
+    {
+        Numerator = x, Denominator = y;
+        stabilize();
+    }
     void outp()
     {
         std::cout << Numerator << "/" << Denominator;
     }
     Fraction reciprocal()
     {
-        return Fraction(Denominator, Numerator);
+        return stable(Fraction(Denominator, Numerator));
     }
     Fraction nega()
     {
-        return Fraction(-Numerator, Denominator);
-    }
-    Fraction stable(Fraction x)
-    {
-        x.stabilize();
-        return x;
+        return stable(Fraction(-Numerator, Denominator));
     }
     Fraction operator+(const Fraction &other)
     {
@@ -146,7 +147,7 @@ void solveLinearSystem()
         }
         std::cout << std::endl;
     }
-    for(int j = 0;numberOfVariables > j;j++)
+    for(int j = numberOfVariables - 1;j >= 0;j--)
     {
         int cc = -1;
         for(int i = numberOfEquations - 1;i >= 0;i--)

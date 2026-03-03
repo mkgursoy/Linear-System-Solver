@@ -127,7 +127,7 @@ void solveLinearSystem()
         }
         std::cout << std::endl;
     }
-    for(int j = 0;numberOfVariables > j;j++)
+    for(int j = numberOfVariables - 1;j >= 0;j--)
     {
         int cc = -1;
         for(int i = numberOfEquations - 1;i >= 0;i--)
